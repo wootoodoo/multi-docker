@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t wootoodoo/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run -e CI=true wootoodoo/react-test npm test
+
+after_success:
+    - docker build -t wootoodoo/multi-client ./client
+    - docker build -t wootoodoo/multi-nginx ./nginx
+    - docker build -t wootoodoo/multi-server ./server
+    - docker build -t wootoodoo/multi-worker ./worker
+    #Log in to docker CLI
+    - echo "$DOCKER_PW" | docker login -u "$DOCKER_ID" --password-stdin
+    # Take images and push to docker hub
+    - docker push wootoodoo/multi-client
+    - docker push wootoodoo/multi-nginx
+    - docker push wootoodoo/multi-server
+    - docker push wootoodoo/multi-worker
